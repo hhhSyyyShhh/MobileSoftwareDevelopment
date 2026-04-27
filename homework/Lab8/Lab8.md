@@ -542,9 +542,6 @@ app/
     ├── HeroesScreen.kt             # 列表和列表项组合项
     ├── Hero.kt                     # 数据类源码
     ├── HeroesRepository.kt         # 数据源源码
-    ├── theme/                      # Color、Shape、Theme、Type 等主题文件
-    ├── drawable/                   # 英雄图片资源
-    ├── font/                       # Cabin 字体资源
     ├── screenshot_light.png        # 浅色主题运行截图
     ├── screenshot_dark.png         # 深色主题运行截图
     └── report.md                   # 实验报告
