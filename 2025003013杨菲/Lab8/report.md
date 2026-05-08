@@ -15,6 +15,7 @@
    - font：引入 Cabin 自定义字体。
    - values：strings.xml 统一管理字符串文本资源。
 
+
 ## 三、核心模块设计说明
 ### 1. Hero 数据类设计
 使用 Kotlin 数据类 `data class` 封装单个英雄信息，结合资源注解约束资源类型，避免传参错误。
