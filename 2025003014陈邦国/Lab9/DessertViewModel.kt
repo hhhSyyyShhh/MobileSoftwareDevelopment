@@ -8,39 +8,35 @@ import com.example.myapplicationlab9.data.Datasource
 import com.example.myapplicationlab9.model.Dessert
 
 class DessertViewModel : ViewModel() {
-
     var uiState by mutableStateOf(DessertUiState())
         private set
 
     private val desserts = Datasource.dessertList
 
     fun onDessertClicked() {
-        val currentState = uiState
+        val current = uiState
+        val newSold = current.dessertsSold + 1
+        val newRevenue = current.revenue + current.currentDessertPrice
+        val newDessert = determineDessertToShow(newSold)
 
-        val newRevenue = currentState.revenue + currentState.currentDessertPrice
-        val newDessertsSold = currentState.dessertsSold + 1
-
-        val dessertToShow = determineDessertToShow(newDessertsSold)
-        val newIndex = desserts.indexOf(dessertToShow)
-
-        uiState = currentState.copy(
+        uiState = current.copy(
             revenue = newRevenue,
-            dessertsSold = newDessertsSold,
-            currentDessertIndex = newIndex,
-            currentDessertImageId = dessertToShow.imageId,
-            currentDessertPrice = dessertToShow.price
+            dessertsSold = newSold,
+            currentDessertIndex = desserts.indexOf(newDessert),
+            currentDessertImageId = newDessert.imageId,
+            currentDessertPrice = newDessert.price
         )
     }
 
-    private fun determineDessertToShow(dessertsSold: Int): Dessert {
-        var dessertToShow = desserts.first()
-        for (dessert in desserts) {
-            if (dessertsSold >= dessert.startProductionAmount) {
-                dessertToShow = dessert
-            } else {
-                break
-            }
+    private fun determineDessertToShow(
+        dessertsSold: Int
+    ): Dessert {
+        var current = desserts.first()
+        for (d in desserts) {
+            if (dessertsSold >= d.startProductionAmount) {
+                current = d
+            } else break
         }
-        return dessertToShow
+        return current
     }
 }

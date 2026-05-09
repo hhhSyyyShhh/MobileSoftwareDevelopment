@@ -86,15 +86,10 @@ fun DessertClickerAppBar(
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
-        title = {
-            Text("甜品点击器")
-        },
+        title = { Text("Dessert Clicker") },
         actions = {
             IconButton(onClick = onShareButtonClicked) {
-                Icon(
-                    imageVector = Icons.Filled.Share,
-                    contentDescription = "分享"
-                )
+                Icon(Icons.Filled.Share, "Share")
             }
         },
         modifier = modifier
@@ -116,7 +111,7 @@ fun DessertClickerScreen(
             verticalArrangement = Arrangement.Top
         ) {
             TransactionInfo(revenue = revenue, dessertsSold = dessertsSold)
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
             DessertButtonImage(
                 dessertImageId = dessertImageId,
                 onDessertClicked = onDessertClicked
@@ -134,13 +129,13 @@ fun TransactionInfo(revenue: Int, dessertsSold: Int) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "总收入：$revenue 金币",
+            text = "Total revenue: $$revenue",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
-            text = "已卖出：$dessertsSold 个",
+            text = "Desserts sold: $dessertsSold",
             fontSize = 22.sp
         )
     }
@@ -154,7 +149,7 @@ fun DessertButtonImage(
 ) {
     Image(
         painter = painterResource(dessertImageId),
-        contentDescription = "甜品",
+        contentDescription = "Dessert",
         modifier = modifier
             .width(250.dp)
             .height(250.dp)
@@ -167,11 +162,12 @@ private fun shareSoldDessertsInformation(
     dessertsSold: Int,
     revenue: Int
 ) {
-    val shareIntent = Intent(Intent.ACTION_SEND)
-        .setType("text/plain")
-        .putExtra(Intent.EXTRA_TEXT, "我卖了 $dessertsSold 个甜品，赚了 $revenue 金币！")
-
-    context.startActivity(Intent.createChooser(shareIntent, "分享到"))
+    val sendIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, "I earned $$revenue selling $dessertsSold desserts!")
+        type = "text/plain"
+    }
+    context.startActivity(Intent.createChooser(sendIntent, null))
 }
 
 @Preview
@@ -181,7 +177,7 @@ fun DessertClickerPreview() {
         DessertClickerScreen(
             revenue = 100,
             dessertsSold = 15,
-            dessertImageId = android.R.drawable.ic_menu_gallery,
+            dessertImageId = R.drawable.cupcake,
             onDessertClicked = {}
         )
     }
