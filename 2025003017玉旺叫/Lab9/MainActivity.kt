@@ -3,13 +3,12 @@ package com.example.dessertclicker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,6 +16,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dessertclicker.ui.DessertUiState
 import com.example.dessertclicker.ui.theme.DessertClickerTheme
 
 class MainActivity : ComponentActivity() {
@@ -30,25 +31,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 甜点数据类
-data class Dessert(
-    val price: Int,
-    val startProductionAmount: Int,
-    @DrawableRes val imageId: Int
-)
-
-// 甜点列表（只用cupcake，避免资源不存在报错）
-val desserts = listOf(
-    Dessert(2, 0, R.drawable.cupcake)
-)
-
 @Composable
-fun DessertClickerApp() {
-    var revenue by remember { mutableStateOf(0) }
-    var dessertsSold by remember { mutableStateOf(0) }
-
-    val currentDessertIndex = dessertsSold % desserts.size
-    val currentDessert = desserts[currentDessertIndex]
+fun DessertClickerApp(
+    viewModel: DessertViewModel = viewModel()
+) {
+    val uiState: DessertUiState = viewModel.uiState
 
     Column(
         modifier = Modifier
@@ -57,34 +44,28 @@ fun DessertClickerApp() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        // 收入和销量显示
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(all = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "总收入: $revenue", fontSize = 16.sp)
-            Text(text = "已售出: $dessertsSold", fontSize = 16.sp)
+            Text(text = "总收入: ${uiState.revenue}", fontSize = 16.sp)
+            Text(text = "已售出: ${uiState.dessertsSold}", fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 甜点图片
         Image(
-            painter = painterResource(id = currentDessert.imageId),
+            painter = painterResource(id = uiState.currentDessertImageId),
             contentDescription = "甜点",
             modifier = Modifier
                 .size(200.dp)
-                .clickable {
-                    revenue += currentDessert.price
-                    dessertsSold++
-                }
+                .clickable { viewModel.onDessertClicked() }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 提示文字
         Text(
             text = "点击甜点来售卖它！",
             fontSize = 18.sp,
