@@ -45,6 +45,7 @@ jobs:
           REPO: ${{ github.repository }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           export PR_NUMBER=$(cat pr-info/pr_number.txt)
           export PR_TITLE=$(cat pr-info/pr_title.txt)
