@@ -6,7 +6,7 @@ PR 自动审核脚本 - 融合版本
 - 文件内容截断（防止 token 超限）
 - 禁止删除文件检查
 - 禁止修改以前作业检查
-- 完整规范嵌入 DeepSeek prompt
+- 完整规范嵌入 GLM prompt
 - 详细的截止时间处理
 """
 
@@ -18,10 +18,11 @@ import base64
 import datetime
 import requests
 
+
 # ── 环境变量 ──────────────────────────────────────────────
 PR_TITLE = os.environ["PR_TITLE"]
 PR_NUMBER = os.environ["PR_NUMBER"]
-DS_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+DS_KEY = os.environ.get("GLM_API_KEY", "")
 GH_TOKEN = os.environ["GH_TOKEN"]
 REPO = os.environ["REPO"]
 HEAD_SHA = os.environ["HEAD_SHA"]
@@ -398,12 +399,12 @@ def check_deadline(lab: str):
     sys.exit(0)
 
 
-# ── 步骤 5：DeepSeek 全面审核 ────────────────────────────
+# ── 步骤 5：GLM 全面审核 ──────────────────────────────────
 
 
 def check_with_deepseek(student_id_name: str, lab: str, changed_files: list):
     if not DS_KEY:
-        print("  [跳过] 未配置 DEEPSEEK_API_KEY，跳过 DeepSeek 审核")
+        print("  [跳过] 未配置 GLM_API_KEY，跳过 GLM 审核")
         return
 
     # 学生提交的文件内容
@@ -462,27 +463,28 @@ def check_with_deepseek(student_id_name: str, lab: str, changed_files: list):
 
     try:
         resp = requests.post(
-            "https://api.deepseek.com/chat/completions",
+            "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             headers={
                 "Authorization": f"Bearer {DS_KEY}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "deepseek-v4-pro",
+                "model": "glm-4.7-flash",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_msg},
                 ],
                 "thinking": {"type": "enabled"},
-                "reasoning_effort": "high",
-                "stream": False,
+                "max_tokens": 65536,
+                "temperature": 1.0,
             },
             timeout=120,
         )
+        resp.raise_for_status()
         text = resp.json()["choices"][0]["message"]["content"].strip()
         text = re.sub(r"```json|```", "", text).strip()
         result = json.loads(text)
-        print(f"  [DeepSeek] pass={result.get('pass')}, reason={result.get('reason')}")
+        print(f"  [GLM] pass={result.get('pass')}, reason={result.get('reason')}")
 
         if not result.get("pass", True):
             reject(
@@ -490,7 +492,7 @@ def check_with_deepseek(student_id_name: str, lab: str, changed_files: list):
                 f"{result.get('reason', '内容存在问题，请检查后重新提交。')}"
             )
     except Exception as e:
-        print(f"  [warn] DeepSeek 审核异常，跳过：{e}")
+        print(f"  [warn] GLM 审核异常，跳过：{e}")
 
 
 # ── 主流程 ────────────────────────────────────────────────
@@ -530,9 +532,9 @@ def main():
     check_deadline(lab)
     print(f"  ✓ 截止时间检查通过")
 
-    # 7. DeepSeek 全面审核
+    # 7. GLM 全面审核
     check_with_deepseek(student_id_name, lab, changed_files)
-    print(f"  ✓ DeepSeek 审核通过")
+    print(f"  ✓ GLM 审核通过")
 
     # 全部通过，评论并合并
     comment(
