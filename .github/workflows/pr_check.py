@@ -18,10 +18,11 @@ import base64
 import datetime
 import requests
 
+
 # ── 环境变量 ──────────────────────────────────────────────
 PR_TITLE = os.environ["PR_TITLE"]
 PR_NUMBER = os.environ["PR_NUMBER"]
-GLM_KEY = os.environ.get("GLM_API_KEY", "")
+DS_KEY = os.environ.get("GLM_API_KEY", "")
 GH_TOKEN = os.environ["GH_TOKEN"]
 REPO = os.environ["REPO"]
 HEAD_SHA = os.environ["HEAD_SHA"]
@@ -36,7 +37,7 @@ GH = {
 # 文件内容最大长度（防止 token 超限）
 MAX_CONTENT_LENGTH = 20000
 
-# 完整规范文档，嵌入 GLM prompt
+# 完整规范文档，嵌入 DeepSeek prompt
 SPEC = """# PR 合并要求规范
 
 ## 2. 学生文件夹规范
@@ -398,11 +399,11 @@ def check_deadline(lab: str):
     sys.exit(0)
 
 
-# ── 步骤 5：GLM 全面审核 ─────────────────────────────────
+# ── 步骤 5：GLM 全面审核 ──────────────────────────────────
 
 
-def check_with_glm(student_id_name: str, lab: str, changed_files: list):
-    if not GLM_KEY:
+def check_with_deepseek(student_id_name: str, lab: str, changed_files: list):
+    if not DS_KEY:
         print("  [跳过] 未配置 GLM_API_KEY，跳过 GLM 审核")
         return
 
@@ -464,19 +465,22 @@ def check_with_glm(student_id_name: str, lab: str, changed_files: list):
         resp = requests.post(
             "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             headers={
-                "Authorization": f"Bearer {GLM_KEY}",
+                "Authorization": f"Bearer {DS_KEY}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "glm-4",
+                "model": "glm-4.7-flash",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_msg},
                 ],
-                "temperature": 0.1,
+                "thinking": {"type": "enabled"},
+                "max_tokens": 65536,
+                "temperature": 1.0,
             },
             timeout=120,
         )
+        resp.raise_for_status()
         text = resp.json()["choices"][0]["message"]["content"].strip()
         text = re.sub(r"```json|```", "", text).strip()
         result = json.loads(text)
@@ -529,7 +533,7 @@ def main():
     print(f"  ✓ 截止时间检查通过")
 
     # 7. GLM 全面审核
-    check_with_glm(student_id_name, lab, changed_files)
+    check_with_deepseek(student_id_name, lab, changed_files)
     print(f"  ✓ GLM 审核通过")
 
     # 全部通过，评论并合并
